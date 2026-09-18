@@ -1,0 +1,4 @@
+node_modules/
+homics.db
+homics.db-wal
+homics.db-shm
