@@ -9,7 +9,7 @@ export function renderizar(contenedor) {
       </select>
 
       <label for="fichero">Fichero:</label>
-      <input type="file" id="fichero" name="fichero" accept=".xlsx" required>
+      <input type="file" id="fichero" name="fichero" accept=".xlsx,.xls" required>
 
       <button type="submit">Subir extracto</button>
     </form>

@@ -100,10 +100,7 @@ describe('servicio de extractos', () => {
   });
 
   it('importar extracto multimes asigna meses económicos automáticamente', () => {
-    const catIngreso = consultar(db, "SELECT id FROM categorias WHERE nombre = 'Transferencia cuenta común'")[0].id;
-
-    // Crear regla para que las transferencias se categoricen como ingreso
-    crearRegla(db, 'traspaso desde cuenta', catIngreso);
+    // Las reglas de ingreso ya existen por la semilla
 
     // Importar extracto multimes que contiene transferencia >1000 el día 27/02
     const buffer = readFileSync(join(DIR_SAMPLES, 'Extracto-BBVA-MarzoFebrero2026.xlsx'));

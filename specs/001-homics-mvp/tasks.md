@@ -146,3 +146,8 @@
 
 - [x] **T-45** Prueba end-to-end completa: subir los 4 extractos de `samples/extractos-tipo/`, categorizar con reglas y manual, verificar dashboard anual y vista mensual con datos reales. [todos los RF, RNF]
   Hecho cuando: dashboard muestra gráficas con datos reales de los 4 extractos, vista mensual filtrable, `npm test` pasa al 100%.
+
+## Post-MVP
+
+- [x] **T-46** Añadir reglas por defecto en `src/core/semilla.js` basadas en los conceptos habituales de los extractos reales. Deben cubrir al menos: ingresos (traspaso/transferencia), supermercados, frutería, gasolina, peajes, farmacia, comunidad, suministros, telecomunicaciones, seguros, transporte público. [RF-04]
+  Hecho cuando: `tests/semilla.test.js` verifica que las reglas se crean con la semilla, y al importar un extracto real las transacciones se categorizan automáticamente sin intervención.

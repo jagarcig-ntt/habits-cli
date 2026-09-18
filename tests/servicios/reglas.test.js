@@ -19,6 +19,9 @@ describe('servicio de reglas', () => {
     ejecutarMigraciones(db, DIR_MIGRACIONES);
     ejecutarSemilla(db);
 
+    // Limpiar reglas de la semilla para tests aislados
+    ejecutar(db, "DELETE FROM reglas");
+
     catSuper = consultar(db, "SELECT id FROM categorias WHERE nombre = 'Supermercado'")[0].id;
     catFruta = consultar(db, "SELECT id FROM categorias WHERE nombre = 'Frutería/Mercado'")[0].id;
 

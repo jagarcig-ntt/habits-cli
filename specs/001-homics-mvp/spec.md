@@ -22,7 +22,7 @@ Homics es una aplicación web de contabilidad familiar. La familia opera con al 
 
 ### RF-01 — Carga de extractos bancarios
 **Cuando** el usuario sube un fichero de extracto bancario, **el sistema** debe parsear las transacciones y almacenarlas asociadas a la cuenta de origen.
-- Criterio de aceptación: soportar XLSX de BBVA (Excel estándar) y XLSX de Openbank (HTML con extensión .xlsx) como formatos mínimos del MVP.
+- Criterio de aceptación: soportar XLSX de BBVA (Excel estándar) y XLS/XLSX de Openbank (HTML con extensión .xls o .xlsx) como formatos mínimos del MVP.
 - Criterio de aceptación: cada transacción almacenada debe contener como mínimo: fecha valor, fecha operación, concepto, importe, saldo resultante y cuenta de origen.
 - Criterio de aceptación: el usuario debe poder seleccionar a qué banco corresponde el fichero antes de subirlo.
 - Criterio de aceptación: un extracto puede contener transacciones de múltiples meses económicos; cada transacción se asigna individualmente al mes que le corresponda por su fecha.
@@ -61,6 +61,7 @@ Homics es una aplicación web de contabilidad familiar. La familia opera con al 
 - Criterio de aceptación: el usuario puede crear, editar y eliminar reglas.
 - Criterio de aceptación: al crear o editar una regla, el sistema aplica automáticamente la nueva regla a todas las transacciones sin categorizar que coincidan.
 - Criterio de aceptación: eliminar una regla no afecta a transacciones ya categorizadas por ella; conservan su categoría.
+- Criterio de aceptación: se incluye un conjunto inicial de reglas por defecto basadas en los conceptos habituales de los extractos reales (ej. "mercadona" → Supermercado, "traspaso desde cuenta" → Transferencia cuenta común). El usuario puede modificarlas o eliminarlas.
 
 ### RF-05 — Categorización manual
 **Cuando** el usuario selecciona una o varias transacciones en la vista mensual, **el sistema** debe permitir asignar o cambiar su categoría manualmente.
@@ -145,7 +146,7 @@ Los ficheros de ejemplo se encuentran en `samples/extractos-tipo/`.
 - Columnas: F.Valor, Fecha, Concepto, Movimiento, Importe, Divisa, Disponible, Divisa, Observaciones.
 - Importe: número con punto decimal (negativo = cargo).
 
-**Openbank** — Fichero HTML con extensión .xlsx.
+**Openbank** — Fichero HTML con extensión .xls o .xlsx (según versión descargada).
 - Cabecera: metadatos de cuenta (número, titular, saldo), luego tabla de movimientos.
 - Columnas: Fecha Operación, Fecha Valor, Concepto, Importe, Saldo.
 - Importe: formato europeo con punto de miles y coma decimal (ej. -1.000,00).

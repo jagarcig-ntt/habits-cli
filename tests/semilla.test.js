@@ -68,5 +68,28 @@ describe('semilla.js', () => {
     assert.equal(tipos.length, 4);
     const categorias = consultar(db, "SELECT * FROM categorias");
     assert.equal(categorias.length, 29);
+    const reglas = consultar(db, "SELECT * FROM reglas");
+    assert.ok(reglas.length > 0, 'Debería haber reglas');
+  });
+
+  it('inserta reglas por defecto', () => {
+    const reglas = consultar(db, "SELECT r.patron, c.nombre AS categoria FROM reglas r JOIN categorias c ON r.categoria_id = c.id ORDER BY r.patron");
+    assert.ok(reglas.length >= 15, `Debería haber al menos 15 reglas, hay ${reglas.length}`);
+
+    // Verificar reglas clave de ingreso
+    const ingreso = reglas.filter(r => r.categoria === 'Transferencia cuenta común');
+    assert.ok(ingreso.length >= 2, 'Debería haber al menos 2 reglas de ingreso');
+
+    // Verificar reglas de supermercado
+    const super_ = reglas.filter(r => r.categoria === 'Supermercado');
+    assert.ok(super_.length >= 3, 'Debería haber al menos 3 reglas de supermercado');
+  });
+
+  it('reglas apuntan a categorías válidas', () => {
+    const reglas = consultar(db, "SELECT r.id, r.categoria_id FROM reglas r");
+    for (const r of reglas) {
+      const cat = consultar(db, "SELECT id FROM categorias WHERE id = ?", [r.categoria_id]);
+      assert.equal(cat.length, 1, `Regla ${r.id} apunta a categoría inexistente ${r.categoria_id}`);
+    }
   });
 });

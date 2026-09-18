@@ -40,6 +40,45 @@ const DATOS = {
   ],
 };
 
+// Reglas por defecto: patrón → nombre de categoría destino
+const REGLAS_DEFECTO = [
+  // Ingreso
+  { patron: 'traspaso desde cuenta', categoria: 'Transferencia cuenta común' },
+  { patron: 'transferencia recibida', categoria: 'Transferencia cuenta común' },
+  // Supermercado
+  { patron: 'mercadona', categoria: 'Supermercado' },
+  { patron: 'ahorramas', categoria: 'Supermercado' },
+  { patron: 'mialcampo', categoria: 'Supermercado' },
+  { patron: 'el corte ingles', categoria: 'Supermercado' },
+  { patron: 'primaprix', categoria: 'Supermercado' },
+  // Frutería/Mercado
+  { patron: 'yaneka', categoria: 'Frutería/Mercado' },
+  { patron: 'frutas y verduras', categoria: 'Frutería/Mercado' },
+  // Gasolina
+  { patron: 'cedipsa', categoria: 'Gasolina' },
+  { patron: 'repsol', categoria: 'Gasolina' },
+  { patron: 'e.s.', categoria: 'Gasolina' },
+  // Peajes
+  { patron: 'autopista', categoria: 'Peajes' },
+  { patron: 'castellana de autopistas', categoria: 'Peajes' },
+  // Farmacia
+  { patron: 'farmacia', categoria: 'Farmacia' },
+  { patron: 'fcia', categoria: 'Farmacia' },
+  // Comunidad
+  { patron: 'comunidad de propietarios', categoria: 'Comunidad' },
+  { patron: 'cp reyes catolicos', categoria: 'Comunidad' },
+  // Suministros
+  { patron: 'octopus energy', categoria: 'Suministros' },
+  // Telecomunicaciones
+  { patron: 'vodafone', categoria: 'Telecomunicaciones' },
+  // Seguros
+  { patron: 'mapfre', categoria: 'Seguros' },
+  // Transporte público
+  { patron: 'metro de madrid', categoria: 'Transporte público' },
+  // Bizum
+  { patron: 'bizum', categoria: 'Bizum' },
+];
+
 export function ejecutarSemilla(db) {
   // Cuentas
   for (const cuenta of DATOS.cuentas) {
@@ -73,5 +112,16 @@ export function ejecutarSemilla(db) {
         }
       }
     }
+  }
+
+  // Reglas por defecto
+  for (const regla of REGLAS_DEFECTO) {
+    const existe = consultar(db, "SELECT id FROM reglas WHERE patron = ?", [regla.patron]);
+    if (existe.length > 0) continue;
+
+    const cat = consultar(db, "SELECT id FROM categorias WHERE nombre = ?", [regla.categoria]);
+    if (cat.length === 0) continue;
+
+    ejecutar(db, "INSERT INTO reglas (patron, categoria_id) VALUES (?, ?)", [regla.patron, cat[0].id]);
   }
 }
