@@ -92,7 +92,6 @@ Homics es una aplicación web de contabilidad familiar. La familia opera con al 
 ### RF-09 — Transferencias internas entre cuentas propias
 **Cuando** se importan extractos de ambas cuentas (BBVA y Openbank), **el sistema** no concilia automáticamente movimientos entre cuentas propias.
 - Criterio de aceptación: el usuario categoriza las transferencias internas manualmente o mediante reglas (ej. "Fondo de Inversion" → categoría Inversión > Fondo de inversión).
-- Criterio de aceptación: las transacciones categorizadas como transferencia interna se pueden excluir de los totales del dashboard para evitar doble contabilización.
 
 ### RF-10 — Estado vacío
 **Cuando** no hay transacciones en el sistema, **el sistema** debe mostrar una pantalla de inicio con un mensaje orientativo y acceso directo a la carga de extractos.
@@ -120,6 +119,7 @@ Homics es una aplicación web de contabilidad familiar. La familia opera con al 
 - Autenticación y multiusuario.
 - Sincronización automática con APIs bancarias (Open Banking / PSD2).
 - Conciliación automática de transferencias entre cuentas propias.
+- Exclusión de transferencias internas de los totales del dashboard (evitar doble contabilización).
 - Presupuestos o alertas de gasto.
 - Exportación de datos.
 - Aplicación móvil o PWA.

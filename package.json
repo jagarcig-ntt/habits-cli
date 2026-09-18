@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/core/servidor.js",
-    "test": "node --test tests/**/*.test.js"
+    "test": "node --test 'tests/**/*.test.js'"
   },
   "dependencies": {
     "better-sqlite3": "^11.0.0",
