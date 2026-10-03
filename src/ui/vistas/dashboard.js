@@ -8,6 +8,51 @@ function formatearImporte(valor) {
   return valor.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 }
 
+function renderizarTopGasto(top) {
+  if (!top || top.length === 0) {
+    return '<p style="color:#9ca3af;">Sin datos de gasto este año.</p>';
+  }
+
+  const maxAbs = Math.abs(top[0].total) || 1;
+
+  return `<ol class="top-gasto-lista">
+    ${top.map(c => {
+      const pct = Math.round((Math.abs(c.total) / maxAbs) * 100);
+      return `<li>
+        <span class="top-gasto-nombre">${c.nombre}</span>
+        <div class="top-gasto-barra-contenedor"><div class="top-gasto-barra" style="width: ${pct}%"></div></div>
+        <span class="top-gasto-valor">${formatearImporte(c.total)}</span>
+      </li>`;
+    }).join('')}
+  </ol>`;
+}
+
+function renderizarVariacion(valorCrudo, tipo) {
+  if (valorCrudo == null) return '<span class="variacion sin-datos">sin datos previos</span>';
+
+  // El gasto se almacena en negativo: invertimos el signo solo para mostrar
+  // "+X%" cuando el gasto sube (peor), igual que hace "+X%" cuando el ingreso sube (mejor).
+  const valor = tipo === 'gasto' ? -valorCrudo : valorCrudo;
+  const favorable = tipo === 'gasto' ? valor <= 0 : valor >= 0;
+  const signo = valor > 0 ? '+' : '';
+  const clase = favorable ? 'variacion-favorable' : 'variacion-desfavorable';
+
+  return `<span class="variacion ${clase}">${signo}${valor} %</span>`;
+}
+
+function renderizarDesgloseMensual(meses) {
+  return `<table>
+    <thead><tr><th>Mes</th><th>Gasto</th><th>Ingreso</th></tr></thead>
+    <tbody>
+      ${meses.map(m => `<tr>
+        <td>${m.nombre}</td>
+        <td>${formatearImporte(m.totales.gasto)} ${renderizarVariacion(m.comparativa?.gasto ?? null, 'gasto')}</td>
+        <td>${formatearImporte(m.totales.ingreso)} ${renderizarVariacion(m.comparativa?.ingreso ?? null, 'ingreso')}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
 function totalesGlobales(meses) {
   const t = { gasto: 0, ingreso: 0, ahorro: 0, inversion: 0 };
   for (const m of meses) {
@@ -49,6 +94,10 @@ async function cargar(contenedor, anio) {
   }
 
   const totales = totalesGlobales(datos.meses);
+  // Ahorro e inversión anuales: usar la fuente única del backend (incluye entradas manuales),
+  // en vez de la suma local, para no duplicar la misma cifra de dos formas distintas.
+  totales.ahorro = datos.acumulado_ahorro;
+  totales.inversion = datos.acumulado_inversion;
   const grupos = gruposGlobales(datos.meses);
 
   contenedor.innerHTML = `
@@ -76,11 +125,25 @@ async function cargar(contenedor, anio) {
         <div class="etiqueta">Inversión</div>
         <div class="valor">${formatearImporte(totales.inversion)}</div>
       </div>
+      <div class="total-card ratio">
+        <div class="etiqueta">Ratio ahorro/ingreso</div>
+        <div class="valor">${datos.ratio_ahorro_ingreso != null ? datos.ratio_ahorro_ingreso + ' %' : '—'}</div>
+      </div>
     </div>
 
     <div class="graficas">
       <div class="grafica-contenedor" id="grafica-barras"></div>
       <div class="grafica-contenedor" id="grafica-donut"></div>
+    </div>
+
+    <div class="grafica-contenedor">
+      <h3>Top categorías de gasto</h3>
+      ${renderizarTopGasto(datos.top_categorias_gasto)}
+    </div>
+
+    <div class="grafica-contenedor">
+      <h3>Desglose mensual</h3>
+      ${renderizarDesgloseMensual(datos.meses)}
     </div>`;
 
   chartBarras = barrasPorMes(document.getElementById('grafica-barras'), datos.meses);

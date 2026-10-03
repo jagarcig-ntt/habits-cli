@@ -54,8 +54,10 @@ export function barrasPorMes(contenedor, meses) {
  * Gráfica de donut: distribución por grupo.
  * @param {HTMLElement} contenedor
  * @param {Array} grupos - [{ nombre, total }]
+ * @param {Object} opciones - { mostrarLeyenda: bool } (por defecto true; desactivar en espacios compactos)
  */
-export function donutPorGrupo(contenedor, grupos) {
+export function donutPorGrupo(contenedor, grupos, opciones = {}) {
+  const { mostrarLeyenda = true } = opciones;
   const canvas = document.createElement('canvas');
   contenedor.appendChild(canvas);
 
@@ -76,7 +78,7 @@ export function donutPorGrupo(contenedor, grupos) {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom' },
+        legend: { display: mostrarLeyenda, position: 'bottom' },
         tooltip: {
           callbacks: {
             label: (ctx) => {

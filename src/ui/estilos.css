@@ -18,6 +18,55 @@
   box-sizing: border-box;
 }
 
+/* --- Modal genérico --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-caja {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-width: 320px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.modal-cabecera h3 {
+  font-size: 1rem;
+}
+
+.modal-cerrar {
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  cursor: pointer;
+}
+
+.modal-cerrar:hover {
+  color: #1a1a1a;
+  background: transparent;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   color: #1a1a1a;
@@ -68,6 +117,19 @@ main {
 h2 {
   margin-bottom: 1rem;
   font-size: 1.1rem;
+}
+
+h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.seccion-ahorro {
+  margin-bottom: 1.5rem;
+}
+
+.seccion-ahorro .lista-editable {
+  margin-bottom: 0.75rem;
 }
 
 /* --- Formularios --- */
@@ -183,6 +245,26 @@ td {
   font-size: 0.85rem;
 }
 
+/* --- Fila de filtros por columna (RF-08) --- */
+tr.fila-filtros-columna td {
+  padding: 0.4rem 0.5rem;
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+tr.fila-filtros-columna input,
+tr.fila-filtros-columna select {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+tr.fila-filtros-columna input[type="date"] {
+  margin-bottom: 0.2rem;
+}
+
 tr:hover {
   background: #f8fafc;
 }
@@ -203,6 +285,82 @@ td.importe {
 
 td.importe.negativo { color: var(--color-gasto); }
 td.importe.positivo { color: var(--color-ingreso); }
+
+tr.excluida {
+  opacity: 0.5;
+}
+
+tr.excluida td:not(:last-child) {
+  text-decoration: line-through;
+}
+
+tr.fila-pendiente {
+  background: #fffbeb;
+  box-shadow: inset 3px 0 0 #d97706;
+}
+
+/* --- Categorización inline --- */
+.select-inline {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  max-width: 220px;
+}
+
+.btn-confirmar-inline {
+  padding: 0.3rem 0.5rem;
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
+  background: var(--color-ingreso);
+}
+
+.btn-confirmar-inline:hover {
+  background: #16a34a;
+}
+
+.btn-excluir {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  background: #6b7280;
+}
+
+.btn-excluir:hover {
+  background: #4b5563;
+}
+
+/* --- Secciones de transacciones por tipo (RF-07) --- */
+.seccion-tx {
+  margin-bottom: 2rem;
+}
+
+/* --- Guardar cambios pendientes (RF-02) --- */
+.acciones-seccion {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.btn-guardar-cambios {
+  background: #d97706;
+}
+
+.btn-guardar-cambios:hover {
+  background: #b45309;
+}
+
+/* --- Paginación --- */
+.btn-mostrar-mas {
+  display: block;
+  margin: 1rem auto 0;
+  background: #fff;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  padding: 0.5rem 1.5rem;
+}
+
+.btn-mostrar-mas:hover {
+  background: #eff6ff;
+}
 
 /* --- Filtros --- */
 .filtros {
@@ -227,6 +385,70 @@ td.importe.positivo { color: var(--color-ingreso); }
   flex-wrap: wrap;
 }
 
+/* --- Top categorías de gasto --- */
+.top-gasto-lista {
+  list-style: none;
+  counter-reset: ranking;
+}
+
+.top-gasto-lista li {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+}
+
+.top-gasto-nombre {
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.top-gasto-barra-contenedor {
+  background: #f1f5f9;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.top-gasto-barra {
+  height: 100%;
+  background: var(--color-gasto);
+  border-radius: 4px;
+}
+
+.top-gasto-valor {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--color-gasto);
+}
+
+/* --- Variación mes vs. mes anterior --- */
+.variacion {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.3rem;
+}
+
+.variacion.sin-datos {
+  color: #9ca3af;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.variacion-favorable {
+  color: var(--color-ingreso);
+  background: var(--color-ingreso-fondo);
+}
+
+.variacion-desfavorable {
+  color: var(--color-gasto);
+  background: var(--color-gasto-fondo);
+}
+
 .grafica-contenedor {
   flex: 1;
   min-width: 300px;
@@ -234,6 +456,39 @@ td.importe.positivo { color: var(--color-ingreso); }
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* --- Cabecera compacta (vista mensual) --- */
+.cabecera-mensual {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.totales-compacto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.total-card.ratio {
+  background: #f8fafc;
+  border-left: 4px solid #64748b;
+}
+
+.donut-compacto {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  overflow: hidden;
 }
 
 /* --- Estado vacío --- */

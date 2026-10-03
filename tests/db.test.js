@@ -127,6 +127,26 @@ describe('db.js', () => {
     assert.ok(colsTx.map(c => c.name).includes('mes_economico_id'), 'transacciones debería tener columna mes_economico_id');
   });
 
+  it('migración 004 añade columna excluida a transacciones y crea tabla ahorro_manual', () => {
+    ejecutarMigraciones(db, DIR_MIGRACIONES_REAL);
+
+    // Columna excluida en transacciones, con default 0
+    const colsTx = consultar(db, "PRAGMA table_info(transacciones)");
+    const colExcluida = colsTx.find(c => c.name === 'excluida');
+    assert.ok(colExcluida, 'transacciones debería tener columna excluida');
+    assert.equal(colExcluida.dflt_value, '0');
+
+    // Tabla ahorro_manual con sus columnas
+    const tablas = consultar(db, "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+    assert.ok(tablas.map(t => t.name).includes('ahorro_manual'), 'Debería existir tabla ahorro_manual');
+
+    const colsAhorro = consultar(db, "PRAGMA table_info(ahorro_manual)");
+    const nombresAhorro = colsAhorro.map(c => c.name);
+    for (const col of ['id', 'mes_economico_id', 'fecha', 'importe', 'tipo', 'nota', 'creado_en']) {
+      assert.ok(nombresAhorro.includes(col), `ahorro_manual debería tener columna '${col}'`);
+    }
+  });
+
   it('UNIQUE constraint lanza error al duplicar', () => {
     writeFileSync(
       join(DIR_MIGRACIONES_TEST, '001_unica.sql'),

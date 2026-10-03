@@ -2,9 +2,13 @@ import { consultar } from './db.js';
 import { importarExtracto } from './servicios/extractos.js';
 import { crearGrupo, editarGrupo, eliminarGrupo, crearCategoria, editarCategoria, eliminarCategoria } from './servicios/categorias.js';
 import { crearRegla, editarRegla, eliminarRegla, obtenerReglas } from './servicios/reglas.js';
-import { obtenerTransacciones, categorizarManual } from './servicios/transacciones.js';
+import { obtenerTransacciones, categorizarManual, alternarExclusion, excluirEnLote } from './servicios/transacciones.js';
 import { calcularMesesEconomicos, asignarMesManual, obtenerMeses } from './servicios/mesEconomico.js';
-import { dashboardAnual, dashboardMensual } from './servicios/dashboard.js';
+import {
+  dashboardAnual, dashboardMensual, topCategoriasGasto, ratioAhorroIngreso,
+  calcularComparativas, acumuladoAhorroInversionAnual,
+} from './servicios/dashboard.js';
+import { crearEntrada, editarEntrada, eliminarEntrada, obtenerEntradas } from './servicios/ahorroManual.js';
 
 const rutas = [];
 
@@ -119,6 +123,7 @@ function manejarErrorServicio(res, err) {
   if (err.code === 'DUPLICADO') return responderJson(res, 409, { error: err.message });
   if (err.code === 'TIENE_DEPENDENCIAS') return responderJson(res, 409, { error: err.message });
   if (err.code === 'NO_ENCONTRADO') return responderJson(res, 404, { error: err.message });
+  if (err.code === 'VALIDACION') return responderJson(res, 400, { error: err.message });
   throw err;
 }
 
@@ -247,7 +252,7 @@ registrar('POST', '/api/meses/corte-manual', async (req, res, url, db) => {
   }
 });
 
-// --- GET /api/transacciones --- [RF-05, RF-08]
+// --- GET /api/transacciones --- [RF-05, RF-08, RF-04, RF-07]
 registrar('GET', '/api/transacciones', (req, res, url, db) => {
   const filtros = {};
   const p = url.searchParams;
@@ -256,8 +261,16 @@ registrar('GET', '/api/transacciones', (req, res, url, db) => {
   if (p.has('cuenta_id')) filtros.cuenta_id = Number(p.get('cuenta_id'));
   if (p.has('importe_min')) filtros.importe_min = Number(p.get('importe_min'));
   if (p.has('importe_max')) filtros.importe_max = Number(p.get('importe_max'));
+  if (p.has('tipo')) filtros.tipo = p.get('tipo');
+  if (p.has('concepto')) filtros.concepto = p.get('concepto');
+  if (p.has('fecha_desde')) filtros.fecha_desde = p.get('fecha_desde');
+  if (p.has('fecha_hasta')) filtros.fecha_hasta = p.get('fecha_hasta');
 
-  const resultado = obtenerTransacciones(db, filtros);
+  const paginacion = {};
+  if (p.has('limit')) paginacion.limit = Number(p.get('limit'));
+  if (p.has('offset')) paginacion.offset = Number(p.get('offset'));
+
+  const resultado = obtenerTransacciones(db, filtros, paginacion);
   responderJson(res, 200, resultado);
 });
 
@@ -275,14 +288,52 @@ registrar('PATCH', '/api/transacciones/categorizar', async (req, res, url, db) =
   responderJson(res, 200, resultado);
 });
 
-// --- GET /api/dashboard/anual --- [RF-07]
-registrar('GET', '/api/dashboard/anual', (req, res, url, db) => {
-  const anio = Number(url.searchParams.get('anio')) || new Date().getFullYear();
-  const resultado = dashboardAnual(db, anio);
+// --- PATCH /api/transacciones/excluir (lote) --- [RF-03]
+registrar('PATCH', '/api/transacciones/excluir', async (req, res, url, db) => {
+  const { ids, excluida } = await leerJson(req);
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return responderJson(res, 400, { error: 'ids requerido (array no vacío)' });
+  }
+  if (typeof excluida !== 'boolean') {
+    return responderJson(res, 400, { error: 'excluida requerido (booleano)' });
+  }
+
+  const resultado = excluirEnLote(db, ids, excluida);
   responderJson(res, 200, resultado);
 });
 
-// --- GET /api/dashboard/mensual/:mes_id --- [RF-08]
+// --- PATCH /api/transacciones/:id/excluir --- [RF-03]
+registrar('PATCH', /^\/api\/transacciones\/(?<id>\d+)\/excluir$/, async (req, res, url, db, params) => {
+  const id = Number(params.id);
+  const existe = consultar(db, "SELECT id FROM transacciones WHERE id = ?", [id]);
+  if (existe.length === 0) {
+    return responderJson(res, 404, { error: 'Transacción no encontrada' });
+  }
+
+  const { excluida } = await leerJson(req);
+  const resultado = alternarExclusion(db, id, !!excluida);
+  responderJson(res, 200, resultado);
+});
+
+// --- GET /api/dashboard/anual --- [RF-07, RF-06]
+registrar('GET', '/api/dashboard/anual', (req, res, url, db) => {
+  const anio = Number(url.searchParams.get('anio')) || new Date().getFullYear();
+  const resultado = dashboardAnual(db, anio);
+
+  const acumulado = acumuladoAhorroInversionAnual(db, anio);
+  const totalIngresoAnual = resultado.meses.reduce((s, m) => s + m.totales.ingreso, 0);
+
+  responderJson(res, 200, {
+    ...resultado,
+    meses: calcularComparativas(resultado.meses),
+    top_categorias_gasto: topCategoriasGasto(db, anio),
+    ratio_ahorro_ingreso: ratioAhorroIngreso(acumulado.ahorro, totalIngresoAnual),
+    acumulado_ahorro: acumulado.ahorro,
+    acumulado_inversion: acumulado.inversion,
+  });
+});
+
+// --- GET /api/dashboard/mensual/:mes_id --- [RF-08, RF-01]
 registrar('GET', /^\/api\/dashboard\/mensual\/(?<id>\d+)$/, (req, res, url, db, params) => {
   const mesId = Number(params.id);
   const mes = consultar(db, "SELECT id FROM meses_economicos WHERE id = ?", [mesId]);
@@ -290,7 +341,52 @@ registrar('GET', /^\/api\/dashboard\/mensual\/(?<id>\d+)$/, (req, res, url, db, 
     return responderJson(res, 404, { error: 'Mes no encontrado' });
   }
   const resultado = dashboardMensual(db, mesId);
-  responderJson(res, 200, resultado);
+  responderJson(res, 200, {
+    ...resultado,
+    ratio_ahorro_ingreso: ratioAhorroIngreso(resultado.totales.ahorro, resultado.totales.ingreso),
+  });
+});
+
+// --- GET /api/ahorro-manual --- [RF-05]
+registrar('GET', '/api/ahorro-manual', (req, res, url, db) => {
+  const mesId = url.searchParams.get('mes_id');
+  if (!mesId) return responderJson(res, 400, { error: 'mes_id requerido' });
+
+  const entradas = obtenerEntradas(db, Number(mesId));
+  responderJson(res, 200, { entradas });
+});
+
+// --- POST /api/ahorro-manual --- [RF-05]
+registrar('POST', '/api/ahorro-manual', async (req, res, url, db) => {
+  try {
+    const { mes_economico_id, fecha, importe, tipo, nota } = await leerJson(req);
+    if (!mes_economico_id || !fecha || importe == null || !tipo) {
+      return responderJson(res, 400, { error: 'mes_economico_id, fecha, importe y tipo requeridos' });
+    }
+    const entrada = crearEntrada(db, { mes_economico_id, fecha, importe, tipo, nota });
+    responderJson(res, 201, entrada);
+  } catch (err) { manejarErrorServicio(res, err); }
+});
+
+// --- PUT /api/ahorro-manual/:id --- [RF-05]
+registrar('PUT', /^\/api\/ahorro-manual\/(?<id>\d+)$/, async (req, res, url, db, params) => {
+  try {
+    const { fecha, importe, tipo, nota } = await leerJson(req);
+    if (!fecha || importe == null || !tipo) {
+      return responderJson(res, 400, { error: 'fecha, importe y tipo requeridos' });
+    }
+    const entrada = editarEntrada(db, Number(params.id), { fecha, importe, tipo, nota });
+    responderJson(res, 200, entrada);
+  } catch (err) { manejarErrorServicio(res, err); }
+});
+
+// --- DELETE /api/ahorro-manual/:id --- [RF-05]
+registrar('DELETE', /^\/api\/ahorro-manual\/(?<id>\d+)$/, (req, res, url, db, params) => {
+  try {
+    eliminarEntrada(db, Number(params.id));
+    res.writeHead(204);
+    res.end();
+  } catch (err) { manejarErrorServicio(res, err); }
 });
 
 // --- GET /api/tipos --- [RF-03]
